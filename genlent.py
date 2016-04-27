@@ -1,91 +1,146 @@
 import random
+import csv
+import sys
+import collections
 
 
-# each ingredient should have nutrient stats per 100g
-ingredients = [
-    {
-        # in 100g
-        "name": "AbsoRice Pea Protein",
-        "price": 2499 / 350.0 * 100.0,
-        "calories": 366,  # kcal
-        "fat": 4,  # grams
-        "carbs": 1.8,  # grams
-        "protein": 81.7,
-    },
-    {
-        # in 100g
-        "name": "Oatmeal",
-        "price": 199 / 500.0 * 100.0,
-        "calories": 372,  # kcal
-        "fat": 7.0,  # grams
-        "carbs": 58.7,  # grams
-        "protein": 13.5,
-    },
-#     {
-        # # in 100g
-        # "name": "Peanut Butter",
-        # "price": 999 / 500.0 * 100.0,
-        # "calories": 634,  # kcal
-        # "fat": 53,  # grams
-        # "carbs": 8.5,  # grams
-        # "protein": 27.0,
-    # },
-    {
-        # in 100g
-        "name": "Maltodextrin",
-        "price": 1090 / 1000.0 * 100.0,
-        "calories": 380,  # kcal
-        "fat": 0,  # grams
-        "carbs": 94,  # grams
-        "protein": 0,
-    },
-    {
-        # in 100g
-        "name": "Soy flour",
-        "price": 674 / 1000.0 * 100.0,
-        "calories": 289,  # kcal
-        "fat": 2,  # grams
-        "carbs": 21,  # grams
-        "protein": 47,
-    },
-    {
-        # in 100g
-        "name": "Peanuts",
-        "price": 1179 / 1000.0 * 100.0,
-        "calories": 560,  # kcal
-        "fat": 47,  # grams
-        "carbs": 19,  # grams
-        "protein": 25,
-    },
-    {
-            # in 100g
-            "name": "Bananas",
-            "price": 390 / 1000.0 * 100.0,
-            "calories": 89,  # kcal
-            "fat": 0.33,  # grams
-            "carbs": 23,  # grams
-            "protein": 1,
-    },
-    {
-            # in 100g
-            "name": "Flaxseed oil",
-            "price": 220 / 1000.0 * 100.0,
-            "calories": 884,  # kcal
-            "fat": 100,  # grams
-            "carbs": 0,  # grams
-            "protein": 0,
-    },
-]
+scores = []
+headers = set()
 
 
-# source: http://daa.asn.au/for-the-public/smart-eating-for-you/nutrition-a-z/daily-intake-guide/
+def exactly(goal, nutrient):
+    def score(total_amounts):
+        return abs(float(total_amounts[nutrient]) - float(goal)) / goal
 
-calorie_goal = 2000
-protein_goal = 150
-fat_goal = 70
-carbs_goal = 310
-price_goal = 300
-number_of_ingredients_goal = 5
+    scores.append(score)
+    headers.add(nutrient)
+
+
+def minimum(goal, nutrient):
+    def score(total_amounts):
+        if total_amounts[nutrient] < goal:
+            return abs(float(total_amounts[nutrient]) - float(goal)) / goal
+        else:
+            return 0
+
+    scores.append(score)
+    headers.add(nutrient)
+
+
+def maximum(goal, nutrient):
+    def score(total_amounts):
+        if total_amounts[nutrient] > goal:
+            return abs(float(total_amounts[nutrient]) - float(goal)) / goal
+        else:
+            return 0
+
+    scores.append(score)
+    headers.add(nutrient)
+
+
+def ratio(goal, nutrient1, nutrient2):
+    def score(total_amounts):
+        if total_amounts[nutrient2]:
+            actual_ration = float(
+                total_amounts[nutrient1]) / float(total_amounts[nutrient2])
+            return abs(actual_ration - goal) / goal
+        else:
+            return 99999
+
+    scores.append(score)
+    headers.add(nutrient1)
+    headers.add(nutrient2)
+
+# Personal information
+body_mass_kg = 80
+
+# Price requirement
+maximum(800, "HUF price")
+
+# Daily requirements
+exactly(2000, "kcal")
+minimum(body_mass_kg * .75, "g protein")
+exactly(65, "g fat")
+exactly(2400, "mg sodium")
+minimum(3500, "mg potassium")
+exactly(300, "g carbs")
+minimum(25, "g fiber")
+
+# Amino acids
+# source: http://www.ncbi.nlm.nih.gov/books/NBK234922/table/ttt00008/?report=objectonly
+minimum(10 * body_mass_kg, "mg histidine"),
+minimum(10 * body_mass_kg, "mg isoleucine"),
+minimum(14 * body_mass_kg, "mg leucine"),
+minimum(12 * body_mass_kg, "mg lysine"),
+minimum(13 * body_mass_kg, "mg methionine plus cystine"),
+minimum(14 * body_mass_kg, "mg phenylalanine plus tyrosine"),
+minimum(7 * body_mass_kg, "mg threonine"),
+minimum(5 * body_mass_kg, "mg tryptophan"),
+minimum(10 * body_mass_kg, "mg valine"),
+
+# Minerals and vitamins
+minimum(900, "μg vitamin a")
+minimum(90, "mg ascorbic acid vitamin c")
+minimum(1300, "mg calcium")
+minimum(18, "mg iron")
+minimum(800, "iu cholecalciferol vitamin d")
+minimum(33, "mg tocopherol vitamin e")
+minimum(120, "μg vitamin k")
+minimum(1.2, "mg thiamin vitamin b1")
+minimum(1.3, "mg riboflavin vitamin b2")
+minimum(16, "mg niacin vitamin b3")
+minimum(1.7, "mg pyridoxine vitamin b6")
+minimum(400, "μg folate")
+minimum(2.4, "μg cobalamine vitamin b12")
+minimum(30, "μg biotin")
+minimum(5, "mg pantothenic acid vitamin b5")
+minimum(1250, "mg phosphorus")
+minimum(150, "μg iodine")
+minimum(420, "mg magnesium")
+minimum(11, "mg zinc")
+minimum(55, "μg selenium")
+minimum(900, "μg copper")
+minimum(2.3, "mg manganese")
+minimum(35, "μg chromium")
+minimum(45, "μg molybdenum")
+minimum(2300, "mg chloride")
+
+# Fatty acids
+minimum(17, "g omega-6")
+minimum(1.7, "g omega-3")
+ratio(1.0, "g omega-6", "g omega-3")
+
+print(headers)
+
+special_formatting = {
+    "name": str,
+    "source": str
+}
+
+
+def get_variable_formatting(variable_name):
+    if variable_name in special_formatting:
+        return special_formatting[variable_name]
+    else:
+        return float
+
+
+def validate_ingredient(ingredient):
+    for key in headers:
+        ingredient[key]
+
+# values should be for 100g
+ingredients = []
+
+with open(sys.argv[1]) as input_file:
+    for ingredient in csv.DictReader(input_file):
+        validate_ingredient(ingredient)
+        ingredients.append({
+            key: get_variable_formatting(key)(value)
+            for key, value in ingredient.items()
+        })
+
+print(ingredients)
 
 
 def get_random_recipe():
@@ -96,68 +151,6 @@ def get_inital_gene_pool(count=10000):
     return list(map(lambda _: get_random_recipe(), range(count)))
 
 
-def get_gene_score_calories(gene):
-    return float(calorie_goal - sum(
-        amount * ingredients[ingredient]["calories"]
-        for ingredient, amount in enumerate(gene)))
-
-
-def get_gene_score_protein(gene):
-    return float(protein_goal - sum(
-        amount * ingredients[ingredient]["protein"]
-        for ingredient, amount in enumerate(gene)))
-
-
-def get_gene_score_fat(gene):
-    return float(fat_goal - sum(
-        amount * ingredients[ingredient]["fat"]
-        for ingredient, amount in enumerate(gene)))
-
-
-def get_score_price(gene):
-    return float(sum(
-        amount * ingredients[ingredient]["price"]
-        for ingredient, amount in enumerate(gene)))
-
-
-def generate_score_function(attribute, goal):
-    def score(gene):
-        return float(goal - sum(
-            amount * ingredients[ingredient][attribute]
-            for ingredient, amount in enumerate(gene))) / goal * 100
-
-    return score
-
-
-def generate_score_function_only_upper_limit(attribute, goal):
-    def score(gene):
-            result = sum(
-                amount * ingredients[ingredient][attribute]
-                for ingredient, amount in enumerate(gene))
-
-            if result > goal:
-                return result * 100 / goal
-            else:
-                return 0
-
-    return score
-
-
-def number_of_ingredients_score(gene):
-    return number_of_ingredients_goal - len([amount for amount in gene if amount >= 1.0]) * 100 / number_of_ingredients_goal
-
-
-scores = {
-    "calories": generate_score_function("calories", goal=calorie_goal),
-    "protein": generate_score_function("protein", goal=protein_goal),
-    "fat": generate_score_function("fat", goal=fat_goal),
-    "carbs": generate_score_function("carbs", goal=carbs_goal),
-    # "number_of_ingredients": number_of_ingredients_score,
-    "price": generate_score_function_only_upper_limit("price", goal=price_goal),
-    # "price": get_score_price,
-}
-
-
 def randomize_gene(gene):
     return list(map(lambda i: i * random.uniform(0.9, 1.1), gene))
 
@@ -166,17 +159,33 @@ def randomize_pool(pool):
     return [randomize_gene(gene) for gene in pool]
 
 
+def get_total_recipe_content(gene):
+    totals = collections.defaultdict(float)
+    for i, amount in enumerate(gene):
+        ingredient = ingredients[i]
+        for variable, value in ingredient.items():
+            if get_variable_formatting(variable) == float:
+                totals[variable] += value * amount
+
+    return totals
+
+
+def get_total_gene_score(gene):
+    totals = get_total_recipe_content(gene)
+    return sum(
+        score(totals) for score in scores
+    )
+
+
 pool = get_inital_gene_pool()
 for generation in range(1000):
     print("Generation #%d" % generation)
     # score = random.choice(list(scores.values()))
 
-    def score(gene):
-        return sum(abs(f(gene)) for f in scores.values())
-
-    best_gene = min(pool, key=lambda gene: score(gene))
-    best_gene_r = tuple("%dg %s" % (int(amount * 100), ingredients[i]["name"]) for i, amount in enumerate(best_gene) if int(amount * 100))
-    print("Best gene: %s; Score: %s; Price %d Ft" % (best_gene_r, {key: -score(best_gene) for key, score in scores.items()}, sum(amount * ingredients[i]["price"] for i, amount in enumerate(best_gene))))
+    best_gene = min(pool, key=get_total_gene_score)
+    print(get_total_gene_score(best_gene))
+#     best_gene_r = tuple("%dg %s" % (int(amount * 100), ingredients[i]["Name"]) for i, amount in enumerate(best_gene) if int(amount * 100))
+#     print("Best gene: %s; Score: %s; Price %d Ft" % (best_gene_r, {key: -score(best_gene) for key, score in scores.items()}, sum(amount * 1 for i, amount in enumerate(best_gene))))
     # pool = [best_gene] * 5000 + pool[0:(len(pool) - 5000)]
-    new_pool = list(sorted(pool, key=score)[0:500]) * 10 + pool[0:5000]
+    new_pool = list(sorted(pool, key=get_total_gene_score)[0:500]) * 10 + pool[0:5000]
     pool = randomize_pool(new_pool)
